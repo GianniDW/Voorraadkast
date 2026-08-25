@@ -95,7 +95,7 @@ const known=p=>pBatches(p).length>0;
 const total=p=>pBatches(p).reduce((a,b)=>a+Number(b.quantity),0);
 const nextBatch=p=>pBatches(p).filter(b=>b.expiry_date).sort((a,b)=>a.expiry_date.localeCompare(b.expiry_date))[0];
 const status=p=>!known(p)?"Nog te tellen":total(p)<Number(p.minimum_stock)?"Onder minimum":total(p)<Number(p.desired_stock)?"Aanvullen":"Op voorraad";
-const const buyInfo=p=>{if(!known(p)&&!batches.some(b=>b.product_id===p.id))return null;const d=Math.max(0,Number(p.desired_stock)-total(p));
+const buyInfo=p=>{if(!known(p)&&!batches.some(b=>b.product_id===p.id))return null;const d=Math.max(0,Number(p.desired_stock)-total(p));
 const statusClass=s=>s==="Op voorraad"?"ok":s==="Onder minimum"?"under":s==="Aanvullen"?"low":"unknown";
 const expiryLabel=p=>{const b=nextBatch(p);if(!b)return"Geen THT geregistreerd";const d=days(b.expiry_date);return (d<0?"vervallen":d<=3?"THT zeer binnenkort":d<=14?"THT binnenkort":"THT")+" · "+fmt(b.expiry_date)};
 
