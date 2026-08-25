@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f7fb">
+<title>Voorraadkast</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#697386;--line:#e3e7ee;--blue:#2563eb;--green:#16834b;--red:#bd2929;--orange:#b96500}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+button,input,select{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+.app{max-width:760px;margin:auto;padding:env(safe-area-inset-top) 14px calc(80px + env(safe-area-inset-bottom))}
+header{padding:18px 2px 12px}h1{font-size:30px;margin:0}header p{margin:3px 0;color:var(--muted)}
+.toolbar{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.btn{border:0;border-radius:14px;padding:13px 10px;font-weight:800;background:#fff;box-shadow:0 1px 5px #0001;color:var(--text)}.primary{background:var(--blue);color:#fff}.green{background:#e7f6ed;color:#11663a}.red{background:#fdeaea;color:#a51f1f}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:12px 0}.stat{background:#fff;border:1px solid var(--line);border-radius:13px;padding:9px 7px}.stat b{display:block;font-size:20px}.stat span{font-size:10px;color:var(--muted)}
+.filters{display:flex;gap:8px;overflow:auto;padding:2px 0 9px}.filters input{min-width:190px}.filters input,.filters select,.form input,.form select{border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff;outline:none;width:100%}
+.card{background:#fff;border:1px solid var(--line);border-radius:17px;padding:14px;margin:9px 0;box-shadow:0 1px 3px #0000000a}.top{display:flex;justify-content:space-between;gap:8px}.name{font-size:18px;font-weight:850}.brand,.mini{font-size:12px;color:var(--muted)}.badge{padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap;height:max-content}.ok{background:#e5f6ec;color:#14673c}.low{background:#fff0db;color:#955000}.under{background:#fde7e7;color:#a31e1e}.unknown{background:#eef0f3;color:#5d6572}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}.metric{background:#f7f8fa;border-radius:11px;padding:9px}.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{font-size:14px}.locations,.expiry{font-size:12px;color:#555;margin:6px 0}.actions{display:flex;gap:7px;margin-top:10px}.actions button{flex:1;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px;font-weight:800}.actions .in{background:#e8f7ef;color:#14673c}.actions .out{background:#fdeaea;color:#a31e1e}
+.modal{position:fixed;inset:0;background:#0007;display:none;align-items:flex-end;z-index:30}.modal.show{display:flex}.sheet{background:var(--bg);width:100%;max-width:760px;margin:auto;max-height:94vh;overflow:auto;border-radius:24px 24px 0 0;padding:18px 15px calc(25px + env(safe-area-inset-bottom))}.sheet h2{margin:0 0 14px}.form{display:grid;gap:10px}.form label{font-size:12px;font-weight:750;color:#4b5563}.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}.footer{display:flex;gap:8px;margin-top:15px}.footer button{flex:1;border:0;border-radius:13px;padding:13px;font-weight:850}.close{background:#e5e7eb}.save{background:var(--blue);color:#fff}.locs{display:flex;flex-wrap:wrap;gap:7px}.loc{padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:12px}.loc.selected{background:#eaf2ff;border-color:#8fb3ff;color:#174ea6}.catalog-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}.catalog-row:last-child{border:0}.inline{display:flex;gap:5px;align-items:center}.inline input{width:68px;padding:7px;border:1px solid var(--line);border-radius:9px}.empty{text-align:center;color:var(--muted);padding:35px 12px}.login{min-height:100vh;display:grid;place-items:center;padding:25px}.loginbox{width:min(430px,100%);background:#fff;border-radius:24px;padding:24px;box-shadow:0 8px 35px #00000012}.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:#172033;color:#fff;padding:11px 15px;border-radius:999px;z-index:60;font-size:13px;max-width:90%;text-align:center}
+@media(min-width:650px){.toolbar{grid-template-columns:repeat(4,1fr)}.sheet{border-radius:24px;margin:auto;max-height:90vh}}
+</style>
+</head>
+<body>
+
+<div id="login" class="login">
+<div class="loginbox">
+<h1>Voorraadkast</h1><p class="brand">Voorraad · catalogus · houdbaarheid</p>
+<div class="form" style="margin-top:18px">
+<label>E-mailadres<input id="loginEmail" type="email" autocomplete="email"></label>
+<label>Wachtwoord<input id="loginPassword" type="password" autocomplete="current-password"></label>
+<button class="btn primary" onclick="signIn()">Inloggen</button>
+<button class="btn" onclick="resetPassword()">Wachtwoord vergeten</button>
+</div><p id="loginMsg" class="mini"></p>
+</div></div>
+
+<div id="app" class="app hidden">
+<header><h1>Voorraadkast</h1><p>Voorraad · catalogus · houdbaarheid</p></header>
+<div class="toolbar">
+<button class="btn primary" onclick="openMovement('IN')">＋ IN</button>
+<button class="btn red" onclick="openMovement('OUT')">− OUT</button>
+<button class="btn" onclick="openCatalog()">⚙️ Catalogus</button>
+<button class="btn" onclick="openShopping()">🛒 Boodschappen</button>
+<button class="btn" onclick="openExpiry()">⏳ Eerst op</button>
+<button class="btn" onclick="openHistory()">📜 Historiek</button>
+<button class="btn primary" onclick="openProduct()">＋ Product</button>
+<button class="btn" onclick="signOut()">Uitloggen</button>
+</div>
+<div class="stats">
+<div class="stat"><b id="sProducts">0</b><span>producten</span></div>
+<div class="stat"><b id="sUnder">0</b><span>onder minimum</span></div>
+<div class="stat"><b id="sBuy">0</b><span>aan te vullen</span></div>
+<div class="stat"><b id="sTht">0</b><span>THT ≤ 14 d</span></div>
+</div>
+<div class="filters">
+<input id="search" placeholder="Zoek product..." oninput="render()">
+<select id="catFilter" onchange="render()"><option value="">Alle categorieën</option></select>
+<select id="statusFilter" onchange="render()"><option value="">Alle statussen</option><option>Nog te tellen</option><option>Op voorraad</option><option>Aanvullen</option><option>Onder minimum</option></select>
+</div>
+<div id="list"></div>
+</div>
+
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+window.addEventListener("error", function(e){
+  if(!window.supabaseClientReady){
+    var box=document.getElementById("login");
+    if(box){
+      box.classList.remove("hidden");
+      box.querySelector(".loginbox").insertAdjacentHTML("beforeend",
+        '<p style="color:#b42318;margin-top:14px">De app kon niet worden geladen. Vernieuw de pagina.</p>');
+    }
+  }
+});
+
+const SUPABASE_URL="https://zjwlsdhielrbmuziyxwe.supabase.co";
+const SUPABASE_KEY="sb_publishable_EQ6FJuEuhhR7ywmGVHUe-g_Sxf8nWIl";
+const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+window.supabaseClientReady=true;
+
+let products=[],locations=[],categories=[],batches=[],history=[];
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+const toast=s=>{const t=$("toast");t.textContent=s;t.classList.remove("hidden");clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>t.classList.add("hidden"),2400)};
+const closeModal=()=>$("modal").classList.remove("show");
+const show=h=>{$("sheet").innerHTML=h;$("modal").classList.add("show")};
+$("modal").onclick=e=>{if(e.target===$("modal"))closeModal()};
+const fmt=d=>d?new Date(d+"T00:00:00").toLocaleDateString("nl-BE",{day:"2-digit",month:"2-digit",year:"numeric"}):"—";
+const days=d=>Math.ceil((new Date(d+"T00:00:00")-new Date(new Date().toDateString()))/86400000);
+const pBatches=p=>batches.filter(b=>b.product_id===p.id&&Number(b.quantity)>0);
+const known=p=>pBatches(p).length>0;
+const total=p=>pBatches(p).reduce((a,b)=>a+Number(b.quantity),0);
+const nextBatch=p=>pBatches(p).filter(b=>b.expiry_date).sort((a,b)=>a.expiry_date.localeCompare(b.expiry_date))[0];
+const status=p=>!known(p)?"Nog te tellen":total(p)<Number(p.minimum_stock)?"Onder minimum":total(p)<Number(p.desired_stock)?"Aanvullen":"Op voorraad";
+const buyInfo=p=>{if(!known(p))return null;const d=Math.max(0,Number(p.desired_stock)-total(p));if(!d)return null;const pack=Number(p.package_content);if(pack>0){const n=Math.ceil(d/pack);return {n,unit:p.purchase_unit||p.unit,total:n*pack}}return {n:d,unit:p.unit,total:d}};
+const statusClass=s=>s==="Op voorraad"?"ok":s==="Onder minimum"?"under":s==="Aanvullen"?"low":"unknown";
+const expiryLabel=p=>{const b=nextBatch(p);if(!b)return"Geen THT geregistreerd";const d=days(b.expiry_date);return (d<0?"vervallen":d<=3?"THT zeer binnenkort":d<=14?"THT binnenkort":"THT")+" · "+fmt(b.expiry_date)};
+
+async function load(){
+ const results=await Promise.all([
+  sb.from("products").select("*").order("name"),
+  sb.from("locations").select("*").order("sort_order"),
+  sb.from("categories").select("*").order("sort_order"),
+  sb.from("stock_batches").select("*").order("expiry_date",{ascending:true,nullsFirst:false}),
+  sb.from("stock_movements").select("*").order("created_at",{ascending:false}).limit(200)
+ ]);
+ for(const r of results)if(r.error)throw r.error;
+ [products,locations,categories,batches,history]=results.map(r=>r.data||[]);
+ render();
+}
+
+function render(){
+ $("catFilter").innerHTML='<option value="">Alle categorieën</option>'+categories.map(c=>`<option>${esc(c.name)}</option>`).join("");
+ const q=$("search").value.toLowerCase(),cat=$("catFilter").value,st=$("statusFilter").value;
+ const arr=products.filter(p=>(!q||(p.name+" "+(p.brand||"")).toLowerCase().includes(q))&&(!cat||p.category===cat)&&(!st||status(p)===st));
+ $("sProducts").textContent=products.length;
+ $("sUnder").textContent=products.filter(p=>known(p)&&total(p)<Number(p.minimum_stock)).length;
+ $("sBuy").textContent=products.filter(p=>buyInfo(p)).length;
+ $("sTht").textContent=products.filter(p=>{const b=nextBatch(p);return b&&days(b.expiry_date)<=14}).length;
+ $("list").innerHTML=arr.length?arr.map(card).join(""):'<div class="empty">Geen producten gevonden.</div>';
+}
+
+function card(p){
+ const t=known(p)?total(p):null,b=buyInfo(p),s=status(p);
+ const loc=[...new Set(pBatches(p).map(x=>locations.find(l=>l.id===x.location_id)?.name).filter(Boolean))];
+ return `<div class="card"><div class="top"><div><div class="name">${esc(p.name)}</div>${p.brand?`<div class="brand">${esc(p.brand)}</div>`:""}</div><span class="badge ${statusClass(s)}">${s}</span></div>
+ <div class="grid"><div class="metric"><small>Actueel</small><strong>${t===null?"Onbekend":t+" "+esc(p.unit)}</strong></div><div class="metric"><small>Minimum</small><strong>${p.minimum_stock} ${esc(p.unit)}</strong></div><div class="metric"><small>Gewenst</small><strong>${p.desired_stock} ${esc(p.unit)}</strong></div><div class="metric"><small>Te kopen</small><strong>${b?b.n+" "+esc(b.unit):"—"}</strong></div></div>
+ <div class="locations">📍 ${loc.length?loc.map(esc).join(" · "):"Nog geen voorraadlocatie"}</div>
+ <div class="expiry">⏳ ${expiryLabel(p)}</div>
+ <div class="actions"><button class="in" onclick="openMovement('IN','${p.id}')">＋ IN</button><button class="out" onclick="openMovement('OUT','${p.id}')">− OUT</button><button onclick="openProduct('${p.id}')">✏️ Bewerken</button></div></div>`;
+}
+
+async function signIn(){
+ $("loginMsg").textContent="Inloggen…";
+ const {error}=await sb.auth.signInWithPassword({email:$("loginEmail").value.trim(),password:$("loginPassword").value});
+ if(error){$("loginMsg").textContent=error.message;return}
+ await boot();
+}
+async function resetPassword(){
+ const email=$("loginEmail").value.trim();
+ if(!email){$("loginMsg").textContent="Vul eerst je e-mailadres in.";return}
+ const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href});
+ $("loginMsg").textContent=error?"Fout: "+error.message:"Resetlink verzonden.";
+}
+async function signOut(){await sb.auth.signOut();location.reload()}
+async function boot(){
+ $("login").classList.add("hidden");$("app").classList.remove("hidden");
+ try{await load()}catch(e){toast("Laden mislukt: "+e.message)}
+}
+
+window.openProduct=async function(id){
+ const p=id?products.find(x=>x.id===id):{name:"",brand:"",category:categories[0]?.name||"Andere",unit:"stuks",minimum_stock:0,desired_stock:0,purchase_unit:"",package_content:null};
+ let selected=[];
+ if(id){const r=await sb.from("product_locations").select("location_id").eq("product_id",id);if(r.error)return toast(r.error.message);selected=(r.data||[]).map(x=>x.location_id)}
+ show(`<h2>${id?"Product bewerken":"Product toevoegen"}</h2><div class="form">
+ <label>Productnaam<input id="fName" value="${esc(p.name)}"></label>
+ <label>Merk (optioneel)<input id="fBrand" value="${esc(p.brand||"")}"></label>
+ <label>Categorie<select id="fCat">${categories.map(c=>`<option ${c.name===p.category?"selected":""}>${esc(c.name)}</option>`).join("")}</select></label>
+ <label>Standaardeenheid<input id="fUnit" value="${esc(p.unit||"stuks")}"></label>
+ <div class="row"><label>Minimumvoorraad<input id="fMin" type="number" min="0" value="${p.minimum_stock}"></label><label>Gewenste voorraad<input id="fWant" type="number" min="0" value="${p.desired_stock}"></label></div>
+ <div class="row"><label>Aankoopeenheid<input id="fBuy" value="${esc(p.purchase_unit||"")}" placeholder="bv. zak"></label><label>Inhoud verpakking<input id="fPack" type="number" min="0" value="${p.package_content||""}" placeholder="bv. 500"></label></div>
+ <label>Standaardlocaties</label><div class="locs" id="locChoices">${locations.map(l=>`<button type="button" data-id="${l.id}" class="loc ${selected.includes(l.id)?"selected":""}" onclick="this.classList.toggle('selected')">${esc(l.name)}</button>`).join("")}</div>
+ </div><div class="footer"><button class="close" onclick="closeModal()">Annuleren</button><button class="save" onclick="saveProduct('${id||""}')">Opslaan</button></div>
+ ${id?`<button class="btn red" style="width:100%;margin-top:9px" onclick="deleteProduct('${id}')">🗑️ Product verwijderen</button>`:""}`);
+};
+
+window.saveProduct=async function(id){
+ const name=$("fName").value.trim();if(!name)return toast("Productnaam is verplicht.");
+ const data={name,brand:$("fBrand").value.trim()||null,category:$("fCat").value,unit:$("fUnit").value.trim()||"stuks",minimum_stock:Number($("fMin").value)||0,desired_stock:Number($("fWant").value)||0,purchase_unit:$("fBuy").value.trim()||null,package_content:Number($("fPack").value)||null};
+ let p;
+ if(id){const r=await sb.from("products").update(data).eq("id",id).select().single();if(r.error)return toast(r.error.message);p=r.data;await sb.from("product_locations").delete().eq("product_id",id)}
+ else{const r=await sb.from("products").insert(data).select().single();if(r.error)return toast(r.error.message);p=r.data}
+ const ids=[...document.querySelectorAll("#locChoices .selected")].map(x=>Number(x.dataset.id));
+ if(ids.length){const r=await sb.from("product_locations").insert(ids.map(location_id=>({product_id:p.id,location_id})));if(r.error)return toast(r.error.message)}
+ closeModal();await load();toast("Product opgeslagen.");
+};
+
+window.deleteProduct=async function(id){
+ if(!confirm("Product verwijderen?"))return;
+ const r=await sb.from("products").delete().eq("id",id);if(r.error)return toast(r.error.message);
+ closeModal();await load();toast("Product verwijderd.");
+};
+
+window.openMovement=function(type,pid){
+ show(`<h2>${type==="IN"?"＋ IN":"− OUT"}</h2><div class="form">
+ <label>Product<select id="mProduct" onchange="movementHint('${type}')">${products.map(p=>`<option value="${p.id}" ${p.id===pid?"selected":""}>${esc(p.name)}${p.brand?" · "+esc(p.brand):""}</option>`).join("")}</select></label>
+ <label>Aantal<input id="mQty" type="number" min="0.01" step="any" value="1"></label>
+ <label>Locatie<select id="mLoc" onchange="movementHint('${type}')"><option value="">— Kies locatie —</option>${locations.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join("")}</select></label>
+ ${type==="IN"?'<label>THT/TGT (optioneel)<input id="mTht" type="date"></label>':""}
+ <div id="movementHint" class="mini"></div></div><div class="footer"><button class="close" onclick="closeModal()">Annuleren</button><button class="${type==="IN"?"save":"btn red"}" onclick="doMovement('${type}')">${type==="IN"?"IN opslaan":"OUT boeken"}</button></div>`);
+ movementHint(type);
+};
+
+window.movementHint=function(type){
+ const p=products.find(x=>x.id===$("mProduct").value),hint=$("movementHint");if(!p)return;
+ const bs=pBatches(p),locIds=[...new Set(bs.map(b=>b.location_id))];
+ if(type==="OUT"&&locIds.length>1&&!$("mLoc").value){
+  const old=nextBatch(p),suggest=old?.location_id||locIds[0],name=locations.find(l=>l.id===suggest)?.name;
+  hint.innerHTML=`⚠️ Je hebt dit product op meerdere locaties. De oudste voorraad ligt op <b>${esc(name||"onbekend")}</b>.<br><button class="btn" style="width:100%;margin-top:7px" onclick="document.getElementById('mLoc').value='${suggest}';movementHint('OUT')">Gebruik ${esc(name||"de voorgestelde locatie")}</button>`;
+ }else if(type==="OUT"){
+  hint.textContent="Beschikbaar: "+locIds.map(id=>{const q=bs.filter(b=>b.location_id===id).reduce((a,b)=>a+Number(b.quantity),0);return (locations.find(l=>l.id===id)?.name||"Onbekend")+" ("+q+" "+p.unit+")"}).join(" · ");
+ }else hint.textContent="IN maakt een nieuwe voorraadpartij aan.";
+};
+
+window.doMovement=async function(type){
+ const p=products.find(x=>x.id===$("mProduct").value),qty=Number($("mQty").value),locId=Number($("mLoc").value),tht=type==="IN"?($("mTht")?.value||null):null;
+ if(!p||!qty||qty<=0)return toast("Kies een product en geldig aantal.");
+ if(!locId)return toast("Kies een locatie.");
+ const bs=pBatches(p).filter(b=>b.location_id===locId);
+ if(type==="OUT"){
+  const available=bs.reduce((a,b)=>a+Number(b.quantity),0);
+  if(qty>available)return toast(`Niet genoeg voorraad. Beschikbaar: ${available} ${p.unit}.`);
+  let remaining=qty;
+  for(const b of [...bs].sort((a,b)=>(a.expiry_date||"9999-12-31").localeCompare(b.expiry_date||"9999-12-31"))){
+   if(remaining<=0)break;
+   const take=Math.min(remaining,Number(b.quantity));
+   const r=await sb.from("stock_batches").update({quantity:Number(b.quantity)-take}).eq("id",b.id);
+   if(r.error)return toast(r.error.message);remaining-=take;
+  }
+ }else{
+  const r=await sb.from("stock_batches").insert({product_id:p.id,location_id:locId,quantity:qty,expiry_date:tht});
+  if(r.error)return toast(r.error.message);
+ }
+ const r=await sb.from("stock_movements").insert({movement_type:type,product_id:p.id,quantity:qty,location_id:locId,expiry_date:tht});
+ if(r.error)return toast(r.error.message);
+ closeModal();await load();toast(type==="IN"?"IN opgeslagen.":"OUT geboekt.");
+};
+
+window.openCatalog=function(){
+ show(`<h2>⚙️ Catalogus</h2><button class="btn primary" style="width:100%;margin-bottom:7px" onclick="closeModal();openProduct()">＋ Product toevoegen</button>
+ ${products.map(p=>`<div class="catalog-row"><div><b>${esc(p.name)}</b><div class="mini">${esc(p.brand||"Geen merk")} · ${esc(p.category)} · ${new Set(pBatches(p).map(b=>b.location_id)).size} locaties</div></div>
+ <div><div class="inline"><span class="mini">Min</span><input type="number" min="0" value="${p.minimum_stock}" onchange="quickEdit('${p.id}','minimum_stock',this.value)"><span class="mini">Gew</span><input type="number" min="0" value="${p.desired_stock}" onchange="quickEdit('${p.id}','desired_stock',this.value)"></div>
+ <button class="btn" style="margin-top:5px;width:100%" onclick="closeModal();openProduct('${p.id}')">✏️ Bewerken</button></div></div>`).join("")}`);
+};
+
+window.quickEdit=async function(id,key,value){
+ const patch={};patch[key]=Math.max(0,Number(value)||0);
+ const r=await sb.from("products").update(patch).eq("id",id);if(r.error)return toast(r.error.message);
+ await load();toast("Catalogus bijgewerkt.");
+};
+
+window.openShopping=function(){
+ const rows=products.map(p=>({p,b:buyInfo(p)})).filter(x=>x.b);
+ show(`<h2>🛒 Boodschappen</h2>${rows.length?rows.map(({p,b})=>`<div class="card"><div class="name">${esc(p.name)}</div>${p.brand?`<div class="brand">${esc(p.brand)}</div>`:""}<div class="locations">Actueel: ${total(p)} ${esc(p.unit)} · Gewenst: ${p.desired_stock} ${esc(p.unit)}</div><b>Te kopen: ${b.n} ${esc(b.unit)}</b>${p.package_content?`<div class="mini">Totaal: ${b.total} ${esc(p.unit)}</div>`:""}</div>`).join(""):'<div class="empty">Geen bekende tekorten. Onbekende voorraad wordt niet als tekort beschouwd.</div>'}<div class="footer"><button class="close" onclick="closeModal()">Sluiten</button></div>`);
+};
+
+window.openExpiry=function(){
+ const rows=[];products.forEach(p=>pBatches(p).filter(b=>b.expiry_date).forEach(b=>rows.push({p,b})));
+ rows.sort((a,b)=>a.b.expiry_date.localeCompare(b.b.expiry_date));
+ show(`<h2>⏳ Eerst op</h2>${rows.length?rows.map(({p,b},i)=>`<div class="catalog-row"><div><b>${i+1}. ${esc(p.name)}</b><div class="mini">${fmt(b.expiry_date)} · ${days(b.expiry_date)<0?"vervallen":days(b.expiry_date)+" dagen"}</div></div><div><b>${b.quantity} ${esc(p.unit)}</b><div class="mini">${esc(locations.find(l=>l.id===b.location_id)?.name||"Onbekend")}</div></div></div>`).join(""):'<div class="empty">Geen voorraadpartijen met THT/TGT.</div>'}<div class="footer"><button class="close" onclick="closeModal()">Sluiten</button></div>`);
+};
+
+window.openHistory=function(){
+ show(`<h2>📜 Historiek</h2>${history.length?history.map(h=>{const p=products.find(p=>p.id===h.product_id),l=locations.find(l=>l.id===h.location_id);return `<div class="catalog-row"><div><b>${h.movement_type==="IN"?"＋":"−"} ${esc(p?.name||"Onbekend product")}</b><div class="mini">${new Date(h.created_at).toLocaleString("nl-BE")} · ${esc(l?.name||"Onbekende locatie")}${h.expiry_date?" · THT "+fmt(h.expiry_date):""}</div></div><strong>${h.quantity}</strong></div>`}).join(""):'<div class="empty">Nog geen voorraadbewegingen.</div>'}<div class="footer"><button class="close" onclick="closeModal()">Sluiten</button></div>`);
+};
+
+sb.auth.onAuthStateChange((_event,session)=>{
+  if(session) boot();
+});
+async function boot(){
+  $("login").classList.add("hidden");
+  $("app").classList.remove("hidden");
+  try{await load()}catch(e){toast("Laden mislukt: "+e.message)}
+}
+sb.auth.getSession().then(function(result){
+  if(result.data && result.data.session) boot();
+  else $("login").classList.remove("hidden");
+}).catch(function(e){
+  $("login").classList.remove("hidden");
+  $("loginMsg").textContent="Kan geen verbinding maken met de database.";
+});
+</script>
+
+<noscript>
+<div style="position:fixed;inset:0;background:#f5f7fb;display:grid;place-items:center;padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#172033">
+  <div style="background:#fff;border-radius:24px;padding:24px;max-width:430px;box-shadow:0 8px 35px #00000012">
+    <h2 style="margin-top:0">Voorraadkast</h2>
+    <p>JavaScript staat uit in deze browser. Schakel JavaScript in om de app te gebruiken.</p>
+  </div>
+</div>
+</noscript>
+
+</body>
+</html>
